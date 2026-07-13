@@ -10,7 +10,7 @@
 
 function bildpfad(reise, index) {
   const nummer = String(index).padStart(4, "0");
-  return `assets/img/${reise.ordner}/${reise.praefix}-${nummer}.jpg`;
+  return `assets/img/${reise.ordner}/${reise.praefix}-${nummer}.web`;
 }
 
 // ---------- Startseite: Karten ----------
