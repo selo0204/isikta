@@ -11,9 +11,11 @@
 }
 
 .logo-img {
-  height: 120px;
+  padding-bottom: 4px;
+  padding-top: 15px;
+  height: 80px;
   width: auto;
-  max-height: none;
+  max-height: 80px;
   filter: invert(86%) sepia(29%) saturate(3437%) hue-rotate(297deg) brightness(84%) contrast(84%);
 }
 
