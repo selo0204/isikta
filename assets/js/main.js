@@ -10,15 +10,29 @@
   "use strict";
 
   /**
+   * Hilfsfunktion: fuehrt fn sofort aus, falls die Seite schon fertig
+   * geladen ist (z.B. weil main.js verspaetet per fetch() nachkommt),
+   * sonst wird auf das load-Event gewartet.
+   */
+  function onReadyOrLoad(fn) {
+    if (document.readyState === "complete") {
+      fn();
+    } else {
+      window.addEventListener("load", fn);
+    }
+  }
+
+  /**
    * Apply .scrolled class to the body as the page is scrolled down
    */
   function toggleScrolled() {
     const selectBody = document.querySelector("body");
     const selectHeader = document.querySelector("#header");
     if (
-      !selectHeader.classList.contains("scroll-up-sticky") &&
+      !selectHeader ||
+      (!selectHeader.classList.contains("scroll-up-sticky") &&
       !selectHeader.classList.contains("sticky-top") &&
-      !selectHeader.classList.contains("fixed-top")
+      !selectHeader.classList.contains("fixed-top"))
     )
       return;
     window.scrollY > 100
@@ -27,7 +41,7 @@
   }
 
   document.addEventListener("scroll", toggleScrolled);
-  window.addEventListener("load", toggleScrolled);
+  onReadyOrLoad(toggleScrolled);
 
   /**
    * Mobile nav toggle
@@ -39,7 +53,9 @@
     mobileNavToggleBtn.classList.toggle("bi-list");
     mobileNavToggleBtn.classList.toggle("bi-x");
   }
-  mobileNavToggleBtn.addEventListener("click", mobileNavToogle);
+  if (mobileNavToggleBtn) {
+    mobileNavToggleBtn.addEventListener("click", mobileNavToogle);
+  }
 
   /**
    * Hide mobile nav on same-page/hash links
@@ -77,12 +93,7 @@
         preloader.remove();
       }, 600);
     };
-
-    if (document.readyState === "complete") {
-      entferneVorlader();
-    } else {
-      window.addEventListener("load", entferneVorlader);
-    }
+    onReadyOrLoad(entferneVorlader);
   }
 
   /**
@@ -97,15 +108,17 @@
         : scrollTop.classList.remove("active");
     }
   }
-  scrollTop.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
+  if (scrollTop) {
+    scrollTop.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     });
-  });
+  }
 
-  window.addEventListener("load", toggleScrollTop);
+  onReadyOrLoad(toggleScrollTop);
   document.addEventListener("scroll", toggleScrollTop);
 
   /**
@@ -119,7 +132,7 @@
       mirror: false,
     });
   }
-  window.addEventListener("load", aosInit);
+  onReadyOrLoad(aosInit);
 
   /**
    * Initiate glightbox
@@ -145,5 +158,5 @@
     });
   }
 
-  window.addEventListener("load", initSwiper);
+  onReadyOrLoad(initSwiper);
 })();
