@@ -145,7 +145,6 @@ h6 {
   max-height: 80px;
   width: auto;
   margin-right: 8px;
-  filter: invert(86%) sepia(29%) saturate(3437%) hue-rotate(297deg) brightness(84%) contrast(84%);
 }
 
 .header .logo img {
