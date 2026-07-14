@@ -88,7 +88,7 @@
                 <i class="bi bi-telephone flex-shrink-0"></i>
                 <div>
                   <h3>Anrufen</h3>
-                  <p>+43 660 3547784</p>
+                  <p><a href="tel:+436603547784">+43 660 3547784</a></p>
                 </div>
               </div>
             </div><!-- End Info Item -->
@@ -98,7 +98,7 @@
                 <i class="bi bi-envelope flex-shrink-0"></i>
                 <div>
                   <h3>E-Mail</h3>
-                  <p>selin.ulu04@gmail.com</p>
+                  <p><a href="mailto:selin.ulu04@gmail.com">selin.ulu04@gmail.com</a></p>
                 </div>
               </div>
             </div><!-- End Info Item -->
@@ -106,7 +106,10 @@
           </div>
         </div>
 
-        <form action="forms/contact.php" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="300">
+        <form id="contact-form" class="php-email-form" data-aos="fade-up" data-aos-delay="300">
+          <input type="hidden" name="access_key" value="DEIN_WEB3FORMS_ACCESS_KEY">
+          <input type="checkbox" name="botcheck" class="d-none" style="display:none">
+
           <div class="row gy-4">
 
             <div class="col-md-6">
@@ -154,10 +157,53 @@
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
   <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
   <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Web3Forms Kontaktformular -->
+  <script>
+    (function () {
+      const form = document.getElementById("contact-form");
+      if (!form) return;
+
+      const loading = form.querySelector(".loading");
+      const errorMessage = form.querySelector(".error-message");
+      const sentMessage = form.querySelector(".sent-message");
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        loading.style.display = "block";
+        errorMessage.style.display = "none";
+        sentMessage.style.display = "none";
+
+        const formData = new FormData(form);
+
+        fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            loading.style.display = "none";
+            if (data.success) {
+              sentMessage.style.display = "block";
+              form.reset();
+            } else {
+              errorMessage.textContent = "Etwas ist schiefgelaufen. Bitte versuch es später erneut.";
+              errorMessage.style.display = "block";
+            }
+          })
+          .catch(() => {
+            loading.style.display = "none";
+            errorMessage.textContent = "Etwas ist schiefgelaufen. Bitte versuch es später erneut.";
+            errorMessage.style.display = "block";
+          });
+      });
+    })();
+  </script>
 
   <!-- Header/Footer dynamisch laden, startet danach main.js -->
   <script src="assets/js/includes.js"></script>

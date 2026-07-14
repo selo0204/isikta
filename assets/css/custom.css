@@ -10,6 +10,13 @@
   font-size: 32px;
 }
 
+.logo-img {
+  height: 120px;
+  width: auto;
+  max-height: none;
+  filter: invert(86%) sepia(29%) saturate(3437%) hue-rotate(297deg) brightness(84%) contrast(84%);
+}
+
 .page-title .heading h1 {
   font-size: 2.8rem;
 }
