@@ -126,7 +126,12 @@ async function main() {
     await processIncoming(data.ordner, data.praefix);
     const anzahl = countPhotos(data.ordner, data.praefix);
 
-    reisen.push({ ...data, anzahl });
+    // "neue_fotos" is only used by the admin form (Decap CMS) as a way to
+    // upload images into the right "incoming" folder - it has no meaning
+    // for the website itself, so we drop it before writing reisen-data.js
+    const { neue_fotos, ...cleanData } = data;
+
+    reisen.push({ ...cleanData, anzahl });
     log(`${data.id}: ${anzahl} photo(s) total`);
   }
 

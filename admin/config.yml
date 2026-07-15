@@ -1,0 +1,49 @@
+backend:
+  name: github
+  repo: selo0204/isikta
+  branch: main
+  base_url: https://isikta-cms-auth.selin-ulu04.workers.dev
+  auth_endpoint: auth
+
+media_folder: "assets/img/uploads"
+public_folder: "/assets/img/uploads"
+
+collections:
+  - name: "reisen"
+    label: "Reisen"
+    folder: "content/reisen"
+    create: true
+    slug: "{{fields.id}}"
+    media_folder: "/assets/img/{{fields.ordner}}/incoming"
+    public_folder: "/assets/img/{{fields.ordner}}/incoming"
+    fields:
+      - { label: "ID (kurz, keine Leerzeichen, z.B. 'berlin')", name: "id", widget: "string" }
+      - { label: "Titel", name: "titel", widget: "string" }
+      - { label: "Ort", name: "ort", widget: "string" }
+      - { label: "Bilder-Ordnername (technisch, z.B. 'berlin')", name: "ordner", widget: "string" }
+      - { label: "Datei-Präfix (meist gleich wie Ordnername)", name: "praefix", widget: "string" }
+      - { label: "Kategorie", name: "kategorie", widget: "string" }
+      - { label: "Zeitraum", name: "zeitraum", widget: "string" }
+      - { label: "Teaser (kurzer Anreißertext)", name: "teaser", widget: "text" }
+      - { label: "Beschreibung", name: "beschreibung", widget: "text" }
+      - label: "Neue Fotos hochladen"
+        name: "neue_fotos"
+        widget: "list"
+        required: false
+        field: { label: "Foto", name: "foto", widget: "image" }
+
+  - name: "favoriten"
+    label: "Favoriten"
+    files:
+      - file: "content/favoriten.json"
+        label: "Favoriten-Liste"
+        name: "favoriten_liste"
+        fields:
+          - label: "Favoriten"
+            name: "favoriten"
+            widget: "list"
+            fields:
+              - { label: "Reise-ID", name: "ort", widget: "string" }
+              - { label: "Foto-Index", name: "index", widget: "number" }
+              - { label: "Größe", name: "groesse", widget: "select", options: ["gross", "klein"] }
+</parameter>
