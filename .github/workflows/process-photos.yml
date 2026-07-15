@@ -9,6 +9,7 @@ on:
       - "assets/img/**/incoming/**"
       - "content/reisen/**"
       - "content/favoriten.json"
+      - "build-data.js"
 
 # Allow this workflow to commit back to the repo
 permissions:

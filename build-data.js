@@ -24,6 +24,10 @@
  *      - Manual reordering or removal done in the admin form (Decap CMS)
  *        is preserved as-is - this script only appends/cleans, it never
  *        reorders existing entries.
+ *      - MIGRATION: if a trip has no "bilder" array yet at all (e.g. it
+ *        was created before this field existed), the initial order is
+ *        bootstrapped automatically from whatever numbered files already
+ *        exist on disk, sorted numerically - so nothing disappears.
  *    The updated "bilder" array is written back into
  *    content/reisen/<id>.json so the admin form always reflects the
  *    current, real state.
@@ -103,12 +107,7 @@ async function processIncoming(ordner, praefix) {
 }
 
 // ---------- Step 2: reconcile the ordered "bilder" list ----------
-// Decap CMS stores image widget values as a full public path
-// (e.g. "/assets/img/vienna/vienna-0001.webp"), while our own processing
-// step only knows plain filenames. This function accepts both, always
-// normalizes to a plain filename internally, and always writes back full
-// public paths so the admin form's image previews keep working.
-function reconcileBilderList(ordner, existingList, newlyCreated) {
+function reconcileBilderList(ordner, praefix, existingList, newlyCreated) {
   const folderPath = path.join(IMG_DIR, ordner);
   const onDisk = fs.existsSync(folderPath)
     ? new Set(fs.readdirSync(folderPath).filter((f) => f.endsWith(".webp")))
@@ -116,9 +115,20 @@ function reconcileBilderList(ordner, existingList, newlyCreated) {
 
   const toFilename = (entry) => path.basename(entry);
 
-  const cleanedFilenames = (existingList || [])
-    .map(toFilename)
-    .filter((f) => onDisk.has(f));
+  let cleanedFilenames;
+
+  if (!existingList || existingList.length === 0) {
+    const pattern = new RegExp(`^${escapeRegExp(praefix)}-(\\d{4})\\.webp$`);
+    cleanedFilenames = [...onDisk]
+      .filter((f) => pattern.test(f))
+      .sort((a, b) => {
+        const numA = parseInt(a.match(pattern)[1], 10);
+        const numB = parseInt(b.match(pattern)[1], 10);
+        return numA - numB;
+      });
+  } else {
+    cleanedFilenames = existingList.map(toFilename).filter((f) => onDisk.has(f));
+  }
 
   for (const file of newlyCreated) {
     if (!cleanedFilenames.includes(file)) cleanedFilenames.push(file);
@@ -151,7 +161,7 @@ async function main() {
     }
 
     const newlyCreated = await processIncoming(data.ordner, data.praefix);
-    const bilder = reconcileBilderList(data.ordner, data.bilder, newlyCreated);
+    const bilder = reconcileBilderList(data.ordner, data.praefix, data.bilder, newlyCreated);
 
     const { neue_fotos, bilder: _oldBilder, ...rest } = data;
     const updatedData = { ...rest, bilder };
