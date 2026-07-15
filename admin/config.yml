@@ -14,8 +14,6 @@ collections:
     folder: "content/reisen"
     create: true
     slug: "{{fields.id}}"
-    media_folder: "/assets/img/{{fields.ordner}}/incoming"
-    public_folder: "/assets/img/{{fields.ordner}}/incoming"
     fields:
       - { label: "ID (kurz, keine Leerzeichen, z.B. 'berlin')", name: "id", widget: "string" }
       - { label: "Titel", name: "titel", widget: "string" }
@@ -26,11 +24,20 @@ collections:
       - { label: "Zeitraum", name: "zeitraum", widget: "string" }
       - { label: "Teaser (kurzer Anreißertext)", name: "teaser", widget: "text" }
       - { label: "Beschreibung", name: "beschreibung", widget: "text" }
-      - label: "Neue Fotos hochladen"
+      - label: "Neue Fotos hochladen (werden automatisch verkleinert & ans Ende der Galerie angehängt)"
         name: "neue_fotos"
         widget: "list"
         required: false
+        media_folder: "/assets/img/{{fields.ordner}}/incoming"
+        public_folder: "/assets/img/{{fields.ordner}}/incoming"
         field: { label: "Foto", name: "foto", widget: "image" }
+      - label: "Bilder-Reihenfolge (ziehen zum Sortieren, Mülleimer zum Entfernen aus der Galerie)"
+        name: "bilder"
+        widget: "list"
+        required: false
+        media_folder: "/assets/img/{{fields.ordner}}"
+        public_folder: "/assets/img/{{fields.ordner}}"
+        field: { label: "Bild", name: "bild", widget: "image" }
 
   - name: "favoriten"
     label: "Favoriten"

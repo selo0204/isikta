@@ -1,25 +1,37 @@
 /**
  * build-data.js
  *
- * Runs automatically on every Cloudflare Pages build (see cloudflare build
- * command). It does two jobs:
+ * Runs automatically on every push (via GitHub Action) and again as a
+ * Cloudflare Pages build step. It does three jobs:
  *
  * 1. IMAGE PROCESSING
  *    For every travel folder under assets/img/<ordner>/, looks inside an
- *    "incoming" subfolder for newly dropped photos (any format, any size,
- *    any filename). Each one gets resized (max width 2200px) and converted
- *    to WebP, then renamed to the next free "<praefix>-XXXX.webp" slot in
- *    the main folder. The original file in "incoming" is then deleted.
+ *    "incoming" subfolder for newly dropped/uploaded photos (any format,
+ *    any size, any filename). Each one gets resized (max width 2200px)
+ *    and converted to WebP, then renamed to the next free
+ *    "<praefix>-XXXX.webp" slot in the main folder. The original file in
+ *    "incoming" is then deleted.
  *
- * 2. DATA GENERATION
- *    Reads every content/reisen/*.json file (one per trip) plus
- *    content/favoriten.json, counts how many "<praefix>-XXXX.webp" files
- *    now exist in each trip's folder, and writes the final
- *    assets/js/reisen-data.js that the website actually uses.
+ * 2. ORDER LIST MAINTENANCE (content/reisen/<id>.json -> "bilder" field)
+ *    Each trip's JSON file has a "bilder" array: an ordered list of
+ *    filenames, e.g. ["vienna-0001.webp", "vienna-0003.webp", ...].
+ *    This is the single source of truth for both the gallery ORDER and
+ *    which photos are actually shown.
+ *      - Newly processed photos (from step 1) are appended to the end
+ *        of this list automatically.
+ *      - Any filename in the list that no longer exists on disk (e.g.
+ *        deleted directly on GitHub) is dropped automatically.
+ *      - Manual reordering or removal done in the admin form (Decap CMS)
+ *        is preserved as-is - this script only appends/cleans, it never
+ *        reorders existing entries.
+ *    The updated "bilder" array is written back into
+ *    content/reisen/<id>.json so the admin form always reflects the
+ *    current, real state.
  *
- * Result: dropping raw photos into an "incoming" folder and pushing to
- * GitHub is the only manual step needed. No file sizes, formats, or photo
- * counts need to be edited by hand anywhere.
+ * 3. DATA GENERATION
+ *    Reads every content/reisen/*.json file plus content/favoriten.json
+ *    and writes the final assets/js/reisen-data.js that the website
+ *    actually uses, including the ordered "bilder" list per trip.
  */
 
 const fs = require("fs");
@@ -40,31 +52,31 @@ function log(msg) {
   console.log(`[build-data] ${msg}`);
 }
 
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // ---------- Step 1: process "incoming" photos for a single trip ----------
 async function processIncoming(ordner, praefix) {
   const folderPath = path.join(IMG_DIR, ordner);
   const incomingPath = path.join(folderPath, "incoming");
+  const newlyCreated = [];
 
-  if (!fs.existsSync(incomingPath)) return; // nothing to do for this trip
+  if (!fs.existsSync(incomingPath)) return newlyCreated;
 
   const incomingFiles = fs
     .readdirSync(incomingPath)
     .filter((f) => SUPPORTED_INPUT_EXT.includes(path.extname(f).toLowerCase()))
-    .sort(); // stable order, e.g. by filename/date if named IMG_0001, IMG_0002...
+    .sort();
 
-  if (incomingFiles.length === 0) return;
+  if (incomingFiles.length === 0) return newlyCreated;
 
-  // Find the highest existing index already used, e.g. vienna-0007.webp -> 7
-  const existing = fs.existsSync(folderPath)
-    ? fs.readdirSync(folderPath)
-    : [];
+  const existing = fs.existsSync(folderPath) ? fs.readdirSync(folderPath) : [];
   const pattern = new RegExp(`^${escapeRegExp(praefix)}-(\\d{4})\\.webp$`);
   let highestIndex = 0;
   for (const file of existing) {
     const match = file.match(pattern);
-    if (match) {
-      highestIndex = Math.max(highestIndex, parseInt(match[1], 10));
-    }
+    if (match) highestIndex = Math.max(highestIndex, parseInt(match[1], 10));
   }
 
   log(`${ordner}: found ${incomingFiles.length} new photo(s) in incoming/, starting at index ${highestIndex + 1}`);
@@ -73,31 +85,46 @@ async function processIncoming(ordner, praefix) {
     highestIndex += 1;
     const nummer = String(highestIndex).padStart(4, "0");
     const inputPath = path.join(incomingPath, file);
-    const outputPath = path.join(folderPath, `${praefix}-${nummer}.webp`);
+    const outputFilename = `${praefix}-${nummer}.webp`;
+    const outputPath = path.join(folderPath, outputFilename);
 
     await sharp(inputPath)
-      .rotate() // auto-orient based on EXIF (important for phone photos)
+      .rotate()
       .resize({ width: MAX_WIDTH, withoutEnlargement: true })
       .webp({ quality: WEBP_QUALITY })
       .toFile(outputPath);
 
     fs.unlinkSync(inputPath);
-    log(`  -> ${file} => ${praefix}-${nummer}.webp`);
+    newlyCreated.push(outputFilename);
+    log(`  -> ${file} => ${outputFilename}`);
   }
+
+  return newlyCreated;
 }
 
-function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-// ---------- Step 2: count final photos for a trip ----------
-function countPhotos(ordner, praefix) {
+// ---------- Step 2: reconcile the ordered "bilder" list ----------
+// Decap CMS stores image widget values as a full public path
+// (e.g. "/assets/img/vienna/vienna-0001.webp"), while our own processing
+// step only knows plain filenames. This function accepts both, always
+// normalizes to a plain filename internally, and always writes back full
+// public paths so the admin form's image previews keep working.
+function reconcileBilderList(ordner, existingList, newlyCreated) {
   const folderPath = path.join(IMG_DIR, ordner);
-  if (!fs.existsSync(folderPath)) return 0;
+  const onDisk = fs.existsSync(folderPath)
+    ? new Set(fs.readdirSync(folderPath).filter((f) => f.endsWith(".webp")))
+    : new Set();
 
-  const pattern = new RegExp(`^${escapeRegExp(praefix)}-(\\d{4})\\.webp$`);
-  const files = fs.readdirSync(folderPath).filter((f) => pattern.test(f));
-  return files.length;
+  const toFilename = (entry) => path.basename(entry);
+
+  const cleanedFilenames = (existingList || [])
+    .map(toFilename)
+    .filter((f) => onDisk.has(f));
+
+  for (const file of newlyCreated) {
+    if (!cleanedFilenames.includes(file)) cleanedFilenames.push(file);
+  }
+
+  return cleanedFilenames.map((filename) => `/assets/img/${ordner}/${filename}`);
 }
 
 // ---------- Main ----------
@@ -123,16 +150,15 @@ async function main() {
       continue;
     }
 
-    await processIncoming(data.ordner, data.praefix);
-    const anzahl = countPhotos(data.ordner, data.praefix);
+    const newlyCreated = await processIncoming(data.ordner, data.praefix);
+    const bilder = reconcileBilderList(data.ordner, data.bilder, newlyCreated);
 
-    // "neue_fotos" is only used by the admin form (Decap CMS) as a way to
-    // upload images into the right "incoming" folder - it has no meaning
-    // for the website itself, so we drop it before writing reisen-data.js
-    const { neue_fotos, ...cleanData } = data;
+    const { neue_fotos, bilder: _oldBilder, ...rest } = data;
+    const updatedData = { ...rest, bilder };
+    fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2) + "\n", "utf-8");
 
-    reisen.push({ ...cleanData, anzahl });
-    log(`${data.id}: ${anzahl} photo(s) total`);
+    reisen.push({ ...updatedData, anzahl: bilder.length });
+    log(`${data.id}: ${bilder.length} photo(s) total`);
   }
 
   const favoriten = fs.existsSync(FAVORITEN_PATH)
@@ -142,7 +168,6 @@ async function main() {
   const output = `/**
  * AUTO-GENERATED FILE - do not edit by hand.
  * Generated by build-data.js from content/reisen/*.json and content/favoriten.json.
- * Run "npm run build:data" (or let Cloudflare Pages run it automatically) to regenerate.
  */
 
 const reisen = ${JSON.stringify(reisen, null, 2)};

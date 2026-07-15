@@ -6,11 +6,21 @@
  *
  * Läuft synchron, BEVOR main.js startet -> GLightbox findet die neu
  * eingefügten Bilder automatisch (Reihenfolge der <script>-Tags beachten!).
+ *
+ * Bilder werden ab jetzt über reise.bilder (ein Array von Dateinamen, in der
+ * gewünschten Reihenfolge) angesprochen, nicht mehr über eine hochgezählte
+ * Nummer. Das Array wird automatisch von build-data.js gepflegt, kann aber
+ * im Admin-Formular (Decap CMS) manuell umsortiert oder gekürzt werden.
  */
 
-function bildpfad(reise, index) {
-  const nummer = String(index).padStart(4, "0");
-  return `assets/img/${reise.ordner}/${reise.praefix}-${nummer}.webp`;
+function bildpfad(reise, eintrag) {
+  // "eintrag" ist entweder ein voller Pfad wie "/assets/img/vienna/xxx.webp"
+  // (so wie Decap CMS es speichert) oder nur ein Dateiname - beides wird
+  // unterstützt.
+  if (eintrag.startsWith("/") || eintrag.startsWith("assets/")) {
+    return eintrag.replace(/^\//, "");
+  }
+  return `assets/img/${reise.ordner}/${eintrag}`;
 }
 
 // ---------- Startseite: Karten ----------
@@ -18,12 +28,15 @@ function renderKarten(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  container.innerHTML = reisen.map(reise => `
+  container.innerHTML = reisen.map(reise => {
+    const ersteDatei = reise.bilder && reise.bilder[0];
+    const src = ersteDatei ? bildpfad(reise, ersteDatei) : "";
+    return `
     <div class="gallery-item">
       <div class="gallery-img-wrap">
-        <img src="${bildpfad(reise, 1)}" class="img-fluid" alt="${reise.titel}" loading="lazy" decoding="async">
+        <img src="${src}" class="img-fluid" alt="${reise.titel}" loading="lazy" decoding="async">
         <div class="gallery-links d-flex align-items-center justify-content-center">
-          <a href="${bildpfad(reise, 1)}" title="${reise.titel}" class="glightbox preview-link"><i class="bi bi-arrows-angle-expand"></i></a>
+          <a href="${src}" title="${reise.titel}" class="glightbox preview-link"><i class="bi bi-arrows-angle-expand"></i></a>
           <a href="reise-detail.html?ort=${reise.id}" class="details-link"><i class="bi bi-link-45deg"></i></a>
         </div>
       </div>
@@ -32,7 +45,8 @@ function renderKarten(containerId) {
         <p class="small mb-0" style="color: color-mix(in srgb, var(--default-color), transparent 25%);">${reise.teaser}</p>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 // ---------- Datenübersicht: Sprungmarken + eine zusammenhängende Tabelle ----------
@@ -88,8 +102,11 @@ function renderFavoriten(containerId) {
 
   container.innerHTML = favoriten.map(f => {
     const reise = reisen.find(r => r.id === f.ort);
-    if (!reise) return "";
-    const src = bildpfad(reise, f.index);
+    if (!reise || !reise.bilder) return "";
+    // f.index ist 1-basiert, wie bisher (1 = erstes Bild in der Liste)
+    const dateiname = reise.bilder[f.index - 1];
+    if (!dateiname) return "";
+    const src = bildpfad(reise, dateiname);
     const spanClass = f.groesse === "gross" ? "bento-item bento-gross" : "bento-item";
     return `
       <div class="${spanClass}">
@@ -125,20 +142,20 @@ function renderDetail() {
   setText("info-anzahl", `${reise.anzahl} Fotos`);
 
   const grid = document.getElementById("detail-galerie");
-  if (grid) {
+  if (grid && reise.bilder) {
     let bilder = "";
-    for (let i = 1; i <= reise.anzahl; i++) {
-      const src = bildpfad(reise, i);
+    reise.bilder.forEach((dateiname, i) => {
+      const src = bildpfad(reise, dateiname);
       bilder += `
         <div class="gallery-item">
           <div class="gallery-img-wrap">
-            <img src="${src}" class="img-fluid" alt="${reise.titel} Foto ${i}" loading="lazy" decoding="async">
+            <img src="${src}" class="img-fluid" alt="${reise.titel} Foto ${i + 1}" loading="lazy" decoding="async">
             <div class="gallery-links d-flex align-items-center justify-content-center">
-              <a href="${src}" title="${reise.titel} ${i}" class="glightbox preview-link" data-gallery="detail-galerie"><i class="bi bi-arrows-angle-expand"></i></a>
+              <a href="${src}" title="${reise.titel} ${i + 1}" class="glightbox preview-link" data-gallery="detail-galerie"><i class="bi bi-arrows-angle-expand"></i></a>
             </div>
           </div>
         </div>`;
-    }
+    });
     grid.innerHTML = bilder;
   }
 }
