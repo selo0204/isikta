@@ -99,7 +99,7 @@ const reisen = [
     "zeitraum": "Mai 2026",
     "teaser": "Kaiserliche Prunkbauten, der Stephansdom im Abendlicht und ein Spaziergang durch die Innenstadt.",
     "beschreibung": "Drei Tage Wien, drei Tage zwischen Kaiserzeit und Gegenwart: von der Hofburg über den Stephansdom bis zu den Dächern der Innenstadt im goldenen Abendlicht. Dazwischen Museen, kleine Kaffeehäuser und ein Abstecher zum Riesenrad. Wien zu fotografieren heißt vor allem, auf Licht und Details zu achten – die Stadt liefert an jeder Ecke ein neues Motiv.",
-    "anzahl": 11
+    "anzahl": 12
   }
 ];
 
