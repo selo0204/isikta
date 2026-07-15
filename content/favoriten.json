@@ -1,10 +1,12 @@
-[
-  { "ort": "wien", "index": 5, "groesse": "gross" },
-  { "ort": "kappadokien", "index": 1, "groesse": "gross" },
-  { "ort": "florenz", "index": 3, "groesse": "klein" },
-  { "ort": "tuningworld", "index": 2, "groesse": "klein" },
-  { "ort": "london", "index": 8, "groesse": "klein" },
-  { "ort": "aesthetik", "index": 6, "groesse": "gross" },
-  { "ort": "prag", "index": 4, "groesse": "klein" },
-  { "ort": "mailand", "index": 1, "groesse": "klein" }
-]
+{
+  "favoriten": [
+    { "ort": "wien", "index": 5, "groesse": "gross" },
+    { "ort": "kappadokien", "index": 1, "groesse": "gross" },
+    { "ort": "florenz", "index": 3, "groesse": "klein" },
+    { "ort": "tuningworld", "index": 2, "groesse": "klein" },
+    { "ort": "london", "index": 8, "groesse": "klein" },
+    { "ort": "aesthetik", "index": 6, "groesse": "gross" },
+    { "ort": "prag", "index": 4, "groesse": "klein" },
+    { "ort": "mailand", "index": 1, "groesse": "klein" }
+  ]
+}

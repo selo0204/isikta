@@ -50,7 +50,15 @@ const OUTPUT_PATH = path.join(ROOT, "assets", "js", "reisen-data.js");
 
 const MAX_WIDTH = 2200;
 const WEBP_QUALITY = 88;
-const SUPPORTED_INPUT_EXT = [".jpg", ".jpeg", ".png", ".heic", ".webp", ".tif", ".tiff"];
+const SUPPORTED_INPUT_EXT = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".heic",
+  ".webp",
+  ".tif",
+  ".tiff",
+];
 
 function log(msg) {
   console.log(`[build-data] ${msg}`);
@@ -83,7 +91,9 @@ async function processIncoming(ordner, praefix) {
     if (match) highestIndex = Math.max(highestIndex, parseInt(match[1], 10));
   }
 
-  log(`${ordner}: found ${incomingFiles.length} new photo(s) in incoming/, starting at index ${highestIndex + 1}`);
+  log(
+    `${ordner}: found ${incomingFiles.length} new photo(s) in incoming/, starting at index ${highestIndex + 1}`,
+  );
 
   for (const file of incomingFiles) {
     highestIndex += 1;
@@ -127,14 +137,18 @@ function reconcileBilderList(ordner, praefix, existingList, newlyCreated) {
         return numA - numB;
       });
   } else {
-    cleanedFilenames = existingList.map(toFilename).filter((f) => onDisk.has(f));
+    cleanedFilenames = existingList
+      .map(toFilename)
+      .filter((f) => onDisk.has(f));
   }
 
   for (const file of newlyCreated) {
     if (!cleanedFilenames.includes(file)) cleanedFilenames.push(file);
   }
 
-  return cleanedFilenames.map((filename) => `/assets/img/${ordner}/${filename}`);
+  return cleanedFilenames.map(
+    (filename) => `/assets/img/${ordner}/${filename}`,
+  );
 }
 
 // ---------- Main ----------
@@ -156,24 +170,36 @@ async function main() {
     const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
     if (!data.ordner || !data.praefix) {
-      console.error(`Trip file ${file} is missing "ordner" or "praefix" - skipping`);
+      console.error(
+        `Trip file ${file} is missing "ordner" or "praefix" - skipping`,
+      );
       continue;
     }
 
     const newlyCreated = await processIncoming(data.ordner, data.praefix);
-    const bilder = reconcileBilderList(data.ordner, data.praefix, data.bilder, newlyCreated);
+    const bilder = reconcileBilderList(
+      data.ordner,
+      data.praefix,
+      data.bilder,
+      newlyCreated,
+    );
 
     const { neue_fotos, bilder: _oldBilder, ...rest } = data;
     const updatedData = { ...rest, bilder };
-    fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2) + "\n", "utf-8");
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify(updatedData, null, 2) + "\n",
+      "utf-8",
+    );
 
     reisen.push({ ...updatedData, anzahl: bilder.length });
     log(`${data.id}: ${bilder.length} photo(s) total`);
   }
 
-  const favoriten = fs.existsSync(FAVORITEN_PATH)
+  const favoritenFile = fs.existsSync(FAVORITEN_PATH)
     ? JSON.parse(fs.readFileSync(FAVORITEN_PATH, "utf-8"))
-    : [];
+    : { favoriten: [] };
+  const favoriten = favoritenFile.favoriten || [];
 
   const output = `/**
  * AUTO-GENERATED FILE - do not edit by hand.
