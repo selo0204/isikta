@@ -1,14 +1,240 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="utf-8" />
   <title>Content Manager – Işıkta</title>
   <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.1/dist/cropper.css" />
 </head>
-
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script src="https://unpkg.com/cropperjs@1.6.1/dist/cropper.js"></script>
+
+  <script>
+    /**
+     * Custom "cropped-image" widget.
+     *
+     * Behaves like the normal image widget (pick a file, or keep the
+     * existing one), but adds a "Zuschneiden" button that opens a crop
+     * modal (Cropper.js) before the file is actually used.
+     *
+     * Non-destructive by design: cropping never overwrites an existing
+     * file. It always produces a brand-new file (e.g.
+     * "vienna-0003-crop-171234.webp"). To "undo", just pick the original
+     * image again from the media library - it's never deleted.
+     */
+    var CroppedImageControl = createClass({
+      getInitialState: function () {
+        return { showCropper: false, cropSrc: null, cropFileName: "photo.webp" };
+      },
+
+      openCropperWithFile: function (file) {
+        var reader = new FileReader();
+        var self = this;
+        reader.onload = function (e) {
+          self.setState({
+            showCropper: true,
+            cropSrc: e.target.result,
+            cropFileName: file.name,
+          });
+        };
+        reader.readAsDataURL(file);
+      },
+
+      handleFileInput: function (e) {
+        var file = e.target.files && e.target.files[0];
+        if (file) this.openCropperWithFile(file);
+      },
+
+      handleRecrop: function () {
+        var value = this.props.value;
+        if (!value) return;
+        var self = this;
+        var url = this.props.getAsset ? this.props.getAsset(value).toString() : value;
+        fetch(url)
+          .then(function (res) { return res.blob(); })
+          .then(function (blob) {
+            var file = new File([blob], "recrop.webp", { type: blob.type || "image/webp" });
+            self.openCropperWithFile(file);
+          });
+      },
+
+      componentDidUpdate: function (prevProps, prevState) {
+        var self = this;
+        if (this.state.showCropper && !prevState.showCropper) {
+          setTimeout(function () {
+            var img = document.getElementById("crop-image-" + self._instanceId);
+            if (img && window.Cropper) {
+              self.cropper = new window.Cropper(img, { viewMode: 1, autoCropArea: 1 });
+            }
+          }, 50);
+        }
+      },
+
+      componentWillMount: function () {
+        this._instanceId = Math.random().toString(36).slice(2);
+      },
+
+      confirmCrop: function () {
+        var self = this;
+        if (!this.cropper) return;
+        var canvas = this.cropper.getCroppedCanvas();
+        canvas.toBlob(function (blob) {
+          var stamp = Date.now();
+          var baseName = self.state.cropFileName.replace(/\.[^.]+$/, "");
+          var croppedFile = new File([blob], baseName + "-crop-" + stamp + ".webp", {
+            type: "image/webp",
+          });
+          self.props.onChange(croppedFile);
+          self.cropper.destroy();
+          self.cropper = null;
+          self.setState({ showCropper: false, cropSrc: null });
+        }, "image/webp", 0.9);
+      },
+
+      cancelCrop: function () {
+        if (this.cropper) {
+          this.cropper.destroy();
+          this.cropper = null;
+        }
+        this.setState({ showCropper: false, cropSrc: null });
+      },
+
+      render: function () {
+        var value = this.props.value;
+        var getAsset = this.props.getAsset;
+        var previewSrc = value && getAsset ? getAsset(value).toString() : value;
+
+        var children = [];
+
+        if (previewSrc) {
+          children.push(
+            h("img", {
+              key: "preview",
+              src: previewSrc,
+              style: { maxWidth: "200px", display: "block", marginBottom: "8px", borderRadius: "6px" },
+            })
+          );
+        }
+
+        children.push(
+          h("input", {
+            key: "file-input",
+            type: "file",
+            accept: "image/*",
+            onChange: this.handleFileInput,
+            style: { marginBottom: "8px" },
+          })
+        );
+
+        if (previewSrc) {
+          children.push(
+            h(
+              "button",
+              {
+                key: "recrop-btn",
+                type: "button",
+                onClick: this.handleRecrop,
+                style: {
+                  marginLeft: "8px",
+                  padding: "6px 14px",
+                  borderRadius: "4px",
+                  border: "1px solid #c97b84",
+                  background: "transparent",
+                  color: "#c97b84",
+                  cursor: "pointer",
+                },
+              },
+              "Neu zuschneiden"
+            )
+          );
+        }
+
+        if (this.state.showCropper) {
+          children.push(
+            h(
+              "div",
+              {
+                key: "crop-modal",
+                style: {
+                  position: "fixed",
+                  inset: 0,
+                  background: "rgba(0,0,0,0.85)",
+                  zIndex: 9999,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "20px",
+                },
+              },
+              h(
+                "div",
+                { style: { maxWidth: "800px", maxHeight: "70vh", overflow: "hidden" } },
+                h("img", {
+                  id: "crop-image-" + this._instanceId,
+                  src: this.state.cropSrc,
+                  style: { maxWidth: "100%" },
+                })
+              ),
+              h(
+                "div",
+                { style: { marginTop: "16px" } },
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: this.confirmCrop,
+                    style: {
+                      padding: "10px 24px",
+                      marginRight: "10px",
+                      borderRadius: "4px",
+                      border: "none",
+                      background: "#c97b84",
+                      color: "#fff",
+                      cursor: "pointer",
+                    },
+                  },
+                  "Zuschnitt übernehmen"
+                ),
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: this.cancelCrop,
+                    style: {
+                      padding: "10px 24px",
+                      borderRadius: "4px",
+                      border: "1px solid #fff",
+                      background: "transparent",
+                      color: "#fff",
+                      cursor: "pointer",
+                    },
+                  },
+                  "Abbrechen"
+                )
+              )
+            )
+          );
+        }
+
+        return h("div", {}, children);
+      },
+    });
+
+    var CroppedImagePreview = createClass({
+      render: function () {
+        var value = this.props.value;
+        var getAsset = this.props.getAsset;
+        var src = value && getAsset ? getAsset(value).toString() : value;
+        if (!src) return h("div", {});
+        return h("img", { src: src, style: { maxWidth: "300px" } });
+      },
+    });
+
+    CMS.registerWidget("cropped-image", CroppedImageControl, CroppedImagePreview);
+  </script>
+
   <script>
     var ReisenPreview = createClass({
       render: function () {
@@ -64,49 +290,3 @@
             {
               style: {
                 display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "10px",
-              },
-            },
-            bilder.toArray
-              ? bilder.toArray().map(function (bild, i) {
-                return h("div", { key: i, style: { position: "relative" } },
-                  h("img", {
-                    src: getAsset(bild).toString(),
-                    style: {
-                      width: "100%",
-                      height: "160px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                      display: "block",
-                    },
-                  }),
-                  h(
-                    "span",
-                    {
-                      style: {
-                        position: "absolute",
-                        top: "6px",
-                        left: "6px",
-                        background: "rgba(0,0,0,0.7)",
-                        color: "#fff",
-                        fontSize: "12px",
-                        padding: "2px 8px",
-                        borderRadius: "10px",
-                      },
-                    },
-                    i + 1
-                  )
-                );
-              })
-              : []
-          )
-        );
-      },
-    });
-
-    CMS.registerPreviewTemplate("reisen", ReisenPreview);
-  </script>
-</body>
-
-</html>

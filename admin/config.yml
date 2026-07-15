@@ -32,15 +32,15 @@ collections:
         required: false
         media_folder: "/assets/img/{{fields.ordner}}/incoming"
         public_folder: "/assets/img/{{fields.ordner}}/incoming"
-        field: { label: "Foto", name: "foto", widget: "image" }
-      - label: "Bilder-Reihenfolge (ziehen zum Sortieren, Mülleimer zum Entfernen aus der Galerie)"
+        field: { label: "Foto", name: "foto", widget: "cropped-image" }
+      - label: "Bilder-Reihenfolge (ziehen zum Sortieren, Mülleimer zum Entfernen aus der Galerie, 'Neu zuschneiden' zum nachträglichen Zuschneiden)"
         name: "bilder"
         widget: "list"
         required: false
         collapsed: false
         media_folder: "/assets/img/{{fields.ordner}}"
         public_folder: "/assets/img/{{fields.ordner}}"
-        field: { label: "Bild", name: "bild", widget: "image" }
+        field: { label: "Bild", name: "bild", widget: "cropped-image" }
 
   - name: "favoriten"
     label: "Favoriten"
