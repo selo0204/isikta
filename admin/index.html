@@ -11,18 +11,6 @@
   <script src="https://unpkg.com/cropperjs@1.6.1/dist/cropper.js"></script>
 
   <script>
-    /**
-     * Custom "cropped-image" widget.
-     *
-     * Behaves like the normal image widget (pick a file, or keep the
-     * existing one), but adds a "Zuschneiden" button that opens a crop
-     * modal (Cropper.js) before the file is actually used.
-     *
-     * Non-destructive by design: cropping never overwrites an existing
-     * file. It always produces a brand-new file (e.g.
-     * "vienna-0003-crop-171234.webp"). To "undo", just pick the original
-     * image again from the media library - it's never deleted.
-     */
     var CroppedImageControl = createClass({
       getInitialState: function () {
         return { showCropper: false, cropSrc: null, cropFileName: "photo.webp" };
@@ -104,31 +92,60 @@
         var value = this.props.value;
         var getAsset = this.props.getAsset;
         var previewSrc = value && getAsset ? getAsset(value).toString() : value;
+        var inputId = "file-input-" + this._instanceId;
 
-        var children = [];
+        var rowChildren = [];
 
         if (previewSrc) {
-          children.push(
+          rowChildren.push(
             h("img", {
               key: "preview",
               src: previewSrc,
-              style: { maxWidth: "200px", display: "block", marginBottom: "8px", borderRadius: "6px" },
+              style: {
+                width: "70px",
+                height: "70px",
+                objectFit: "cover",
+                borderRadius: "6px",
+                flexShrink: 0,
+              },
             })
           );
         }
 
-        children.push(
+        rowChildren.push(
+          h(
+            "label",
+            {
+              key: "file-label",
+              htmlFor: inputId,
+              style: {
+                padding: "6px 12px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                background: "#f7f7f7",
+                color: "#333",
+                cursor: "pointer",
+                fontSize: "13px",
+                whiteSpace: "nowrap",
+              },
+            },
+            previewSrc ? "Bild ändern" : "Bild auswählen"
+          )
+        );
+
+        rowChildren.push(
           h("input", {
             key: "file-input",
+            id: inputId,
             type: "file",
             accept: "image/*",
             onChange: this.handleFileInput,
-            style: { marginBottom: "8px" },
+            style: { display: "none" },
           })
         );
 
         if (previewSrc) {
-          children.push(
+          rowChildren.push(
             h(
               "button",
               {
@@ -136,19 +153,31 @@
                 type: "button",
                 onClick: this.handleRecrop,
                 style: {
-                  marginLeft: "8px",
-                  padding: "6px 14px",
+                  padding: "6px 12px",
                   borderRadius: "4px",
                   border: "1px solid #c97b84",
                   background: "transparent",
                   color: "#c97b84",
                   cursor: "pointer",
+                  fontSize: "13px",
+                  whiteSpace: "nowrap",
                 },
               },
               "Neu zuschneiden"
             )
           );
         }
+
+        var children = [
+          h(
+            "div",
+            {
+              key: "row",
+              style: { display: "flex", alignItems: "center", gap: "8px" },
+            },
+            rowChildren
+          ),
+        ];
 
         if (this.state.showCropper) {
           children.push(
@@ -290,3 +319,48 @@
             {
               style: {
                 display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "10px",
+              },
+            },
+            bilder.toArray
+              ? bilder.toArray().map(function (bild, i) {
+                  return h("div", { key: i, style: { position: "relative" } },
+                    h("img", {
+                      src: getAsset(bild).toString(),
+                      style: {
+                        width: "100%",
+                        height: "160px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                        display: "block",
+                      },
+                    }),
+                    h(
+                      "span",
+                      {
+                        style: {
+                          position: "absolute",
+                          top: "6px",
+                          left: "6px",
+                          background: "rgba(0,0,0,0.7)",
+                          color: "#fff",
+                          fontSize: "12px",
+                          padding: "2px 8px",
+                          borderRadius: "10px",
+                        },
+                      },
+                      i + 1
+                    )
+                  );
+                })
+              : []
+          )
+        );
+      },
+    });
+
+    CMS.registerPreviewTemplate("reisen", ReisenPreview);
+  </script>
+</body>
+</html>
