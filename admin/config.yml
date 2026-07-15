@@ -46,4 +46,3 @@ collections:
               - { label: "Reise-ID", name: "ort", widget: "string" }
               - { label: "Foto-Index", name: "index", widget: "number" }
               - { label: "Größe", name: "groesse", widget: "select", options: ["gross", "klein"] }
-</parameter>
