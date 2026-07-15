@@ -262,6 +262,112 @@
     });
 
     CMS.registerWidget("cropped-image", CroppedImageControl, CroppedImagePreview);
+    
+    var FavoritenPreview = createClass({
+      render: function () {
+        var entry = this.props.entry;
+        var favoriten = entry.getIn(["data", "favoriten"]) || [];
+
+        return h(
+          "div",
+          {
+            style: {
+              background: "#000",
+              color: "#fafafa",
+              padding: "24px",
+              fontFamily: "sans-serif",
+              minHeight: "100%",
+            },
+          },
+          h(
+            "h1",
+            {
+              style: {
+                fontFamily: "'Berkshire Swash', cursive",
+                fontWeight: 400,
+                fontSize: "2.2rem",
+                marginBottom: "20px",
+              },
+            },
+            "Favoriten"
+          ),
+          h(
+            "div",
+            {
+              style: {
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: "12px",
+              },
+            },
+            favoriten.toArray
+              ? favoriten.toArray().map(function (fav, i) {
+                  var ort = fav.get("ort") || "";
+                  var index = fav.get("index");
+                  var groesse = fav.get("groesse") || "";
+                  var isGross = groesse === "gross";
+                  return h(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        background: "#1a1a1a",
+                        border: "1px solid #333",
+                        borderRadius: "10px",
+                        padding: "14px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      },
+                    },
+                    h(
+                      "div",
+                      {},
+                      h(
+                        "div",
+                        {
+                          style: {
+                            fontSize: "16px",
+                            fontWeight: 600,
+                            textTransform: "capitalize",
+                          },
+                        },
+                        ort
+                      ),
+                      h(
+                        "div",
+                        {
+                          style: { fontSize: "13px", color: "#999", marginTop: "2px" },
+                        },
+                        "Foto Nr. " + index
+                      )
+                    ),
+                    h(
+                      "span",
+                      {
+                        style: {
+                          fontSize: "12px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          padding: "4px 10px",
+                          borderRadius: "20px",
+                          background: isGross ? "#c97b84" : "transparent",
+                          border: isGross ? "none" : "1px solid #666",
+                          color: isGross ? "#fff" : "#999",
+                        },
+                      },
+                      groesse
+                    )
+                  );
+                })
+              : []
+          )
+        );
+      },
+    });
+
+    CMS.registerPreviewTemplate("favoriten", FavoritenPreview);
+  
   </script>
 
   <script>
