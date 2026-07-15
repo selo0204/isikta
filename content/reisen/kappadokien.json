@@ -7,5 +7,13 @@
   "kategorie": "Reise-Highlight",
   "zeitraum": "Juli 2025",
   "teaser": "Feenkamine, Höhlenstädte und die berühmten Sonnenaufgänge mit Heißluftballons.",
-  "beschreibung": "Kappadokien und die Region rund um Nevşehir gehören zum Eindrucksvollsten, was ich bisher fotografiert habe: bizarre Felsformationen, jahrhundertealte Höhlenstädte und Sonnenaufgänge, an denen der Himmel voller Heißluftballons ist. Eine Landschaft, die aussieht wie von einem anderen Planeten."
+  "beschreibung": "Kappadokien und die Region rund um Nevşehir gehören zum Eindrucksvollsten, was ich bisher fotografiert habe: bizarre Felsformationen, jahrhundertealte Höhlenstädte und Sonnenaufgänge, an denen der Himmel voller Heißluftballons ist. Eine Landschaft, die aussieht wie von einem anderen Planeten.",
+  "bilder": [
+    "/assets/img/kapadokien/kapadokien-0001.webp",
+    "/assets/img/kapadokien/kapadokien-0002.webp",
+    "/assets/img/kapadokien/kapadokien-0003.webp",
+    "/assets/img/kapadokien/kapadokien-0004.webp",
+    "/assets/img/kapadokien/kapadokien-0005.webp",
+    "/assets/img/kapadokien/kapadokien-0006.webp"
+  ]
 }

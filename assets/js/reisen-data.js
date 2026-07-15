@@ -238,30 +238,29 @@ const reisen = [
     "anzahl": 5
   },
   {
-    "id": "wien",
     "titel": "Wien",
+    "beschreibung": "Drei Tage Wien, drei Tage zwischen Kaiserzeit und Gegenwart: von der Hofburg über den Stephansdom bis zu den Dächern der Innenstadt im goldenen Abendlicht. Dazwischen Museen, kleine Kaffeehäuser und ein Abstecher zum Riesenrad. Wien zu fotografieren heißt vor allem, auf Licht und Details zu achten – die Stadt liefert an jeder Ecke ein neues Motiv.",
+    "praefix": "vienna",
+    "teaser": "Kaiserliche Prunkbauten, der Stephansdom im Abendlicht und ein Spaziergang durch die Innenstadt.",
     "ort": "Wien, Österreich",
     "ordner": "vienna",
-    "praefix": "vienna",
-    "kategorie": "Städtetrip",
+    "id": "wien",
     "zeitraum": "Mai 2026",
-    "teaser": "Kaiserliche Prunkbauten, der Stephansdom im Abendlicht und ein Spaziergang durch die Innenstadt.",
-    "beschreibung": "Drei Tage Wien, drei Tage zwischen Kaiserzeit und Gegenwart: von der Hofburg über den Stephansdom bis zu den Dächern der Innenstadt im goldenen Abendlicht. Dazwischen Museen, kleine Kaffeehäuser und ein Abstecher zum Riesenrad. Wien zu fotografieren heißt vor allem, auf Licht und Details zu achten – die Stadt liefert an jeder Ecke ein neues Motiv.",
+    "kategorie": "Städtetrip",
     "bilder": [
       "/assets/img/vienna/vienna-0001.webp",
-      "/assets/img/vienna/vienna-0002.webp",
       "/assets/img/vienna/vienna-0003.webp",
+      "/assets/img/vienna/vienna-0002.webp",
       "/assets/img/vienna/vienna-0004.webp",
       "/assets/img/vienna/vienna-0005.webp",
       "/assets/img/vienna/vienna-0006.webp",
+      "/assets/img/vienna/vienna-0011.webp",
       "/assets/img/vienna/vienna-0007.webp",
       "/assets/img/vienna/vienna-0008.webp",
       "/assets/img/vienna/vienna-0009.webp",
-      "/assets/img/vienna/vienna-0010.webp",
-      "/assets/img/vienna/vienna-0011.webp",
-      "/assets/img/vienna/vienna-0012.webp"
+      "/assets/img/vienna/vienna-0010.webp"
     ],
-    "anzahl": 12
+    "anzahl": 11
   }
 ];
 

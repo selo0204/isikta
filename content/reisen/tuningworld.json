@@ -7,5 +7,12 @@
   "kategorie": "Event & Motorsport",
   "zeitraum": "August 2025",
   "teaser": "Getunte Autos, satte Farben und viel Liebe zum Detail auf Europas größter Tuning-Messe.",
-  "beschreibung": "Auf der Tuningworld Bodensee dreht sich alles um PS, Design und Details: umgebaute Klassiker, glänzender Lack und stimmungsvolles Messelicht. Für mich eine willkommene Abwechslung zur klassischen Reisefotografie – hier zählen Reflexionen, Linien und Farben."
+  "beschreibung": "Auf der Tuningworld Bodensee dreht sich alles um PS, Design und Details: umgebaute Klassiker, glänzender Lack und stimmungsvolles Messelicht. Für mich eine willkommene Abwechslung zur klassischen Reisefotografie – hier zählen Reflexionen, Linien und Farben.",
+  "bilder": [
+    "/assets/img/tunningWorld/tunningWorld-0001.webp",
+    "/assets/img/tunningWorld/tunningWorld-0002.webp",
+    "/assets/img/tunningWorld/tunningWorld-0003.webp",
+    "/assets/img/tunningWorld/tunningWorld-0004.webp",
+    "/assets/img/tunningWorld/tunningWorld-0005.webp"
+  ]
 }

@@ -7,5 +7,27 @@
   "kategorie": "Städtetrip",
   "zeitraum": "August 2025",
   "teaser": "Die Goldene Stadt: Türme, Ausblicke über die Moldau und gemütliche Cafés.",
-  "beschreibung": "Prag zeigt sich als Mix aus Türmen, engen Gassen und Ausblicken über die Moldau. Zwischen Burgviertel und Altstadt gab es genug Zeit für Museen, lokale Küche und die berühmte Prager Skyline bei Sonnenuntergang."
+  "beschreibung": "Prag zeigt sich als Mix aus Türmen, engen Gassen und Ausblicken über die Moldau. Zwischen Burgviertel und Altstadt gab es genug Zeit für Museen, lokale Küche und die berühmte Prager Skyline bei Sonnenuntergang.",
+  "bilder": [
+    "/assets/img/Prague/prague-0001.webp",
+    "/assets/img/Prague/prague-0002.webp",
+    "/assets/img/Prague/prague-0003.webp",
+    "/assets/img/Prague/prague-0004.webp",
+    "/assets/img/Prague/prague-0005.webp",
+    "/assets/img/Prague/prague-0006.webp",
+    "/assets/img/Prague/prague-0007.webp",
+    "/assets/img/Prague/prague-0008.webp",
+    "/assets/img/Prague/prague-0009.webp",
+    "/assets/img/Prague/prague-0010.webp",
+    "/assets/img/Prague/prague-0011.webp",
+    "/assets/img/Prague/prague-0012.webp",
+    "/assets/img/Prague/prague-0013.webp",
+    "/assets/img/Prague/prague-0014.webp",
+    "/assets/img/Prague/prague-0015.webp",
+    "/assets/img/Prague/prague-0016.webp",
+    "/assets/img/Prague/prague-0017.webp",
+    "/assets/img/Prague/prague-0018.webp",
+    "/assets/img/Prague/prague-0019.webp",
+    "/assets/img/Prague/prague-0020.webp"
+  ]
 }
