@@ -254,14 +254,13 @@ const reisen = [
       "/assets/img/vienna/vienna-0004.webp",
       "/assets/img/vienna/vienna-0005.webp",
       "/assets/img/vienna/vienna-0006.webp",
+      "/assets/img/vienna/vienna-0011.webp",
       "/assets/img/vienna/vienna-0007.webp",
       "/assets/img/vienna/vienna-0008.webp",
       "/assets/img/vienna/vienna-0009.webp",
-      "/assets/img/vienna/vienna-0010.webp",
-      "/assets/img/vienna/vienna-0011.webp",
-      "/assets/img/vienna/vienna-0012.webp"
+      "/assets/img/vienna/vienna-0010.webp"
     ],
-    "anzahl": 12
+    "anzahl": 11
   }
 ];
 
