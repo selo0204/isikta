@@ -1,0 +1,42 @@
+name: Process incoming photos
+
+# Runs automatically whenever something is pushed to main, as long as the
+# push touches an "incoming" photo folder or the trip data files.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/img/**/incoming/**"
+      - "content/reisen/**"
+      - "content/favoriten.json"
+
+# Allow this workflow to commit back to the repo
+permissions:
+  contents: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Process photos and regenerate reisen-data.js
+        run: npm run build:data
+
+      - name: Commit processed photos and updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/img assets/js/reisen-data.js
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Process new photos and update reisen-data.js [skip ci]"
+          git push
