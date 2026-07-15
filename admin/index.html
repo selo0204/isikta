@@ -1,11 +1,112 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>Content Manager – Işıkta</title>
   <meta name="robots" content="noindex" />
 </head>
+
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script>
+    var ReisenPreview = createClass({
+      render: function () {
+        var entry = this.props.entry;
+        var getAsset = this.props.getAsset;
+        var bilder = entry.getIn(["data", "bilder"]) || [];
+        var titel = entry.getIn(["data", "titel"]) || "";
+        var teaser = entry.getIn(["data", "teaser"]) || "";
+
+        return h(
+          "div",
+          {
+            style: {
+              background: "#000",
+              color: "#fafafa",
+              padding: "24px",
+              fontFamily: "sans-serif",
+              minHeight: "100%",
+            },
+          },
+          h(
+            "h1",
+            {
+              style: {
+                fontFamily: "'Berkshire Swash', cursive",
+                fontWeight: 400,
+                fontSize: "2.4rem",
+                marginBottom: "8px",
+              },
+            },
+            titel
+          ),
+          h(
+            "p",
+            { style: { color: "#c97b84", marginBottom: "20px" } },
+            teaser
+          ),
+          h(
+            "p",
+            {
+              style: {
+                fontSize: "12px",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                color: "#888",
+                marginBottom: "10px",
+              },
+            },
+            "So sieht die Reihenfolge auf der Website aus (ganz links = erstes Bild):"
+          ),
+          h(
+            "div",
+            {
+              style: {
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "10px",
+              },
+            },
+            bilder.toArray
+              ? bilder.toArray().map(function (bild, i) {
+                return h("div", { key: i, style: { position: "relative" } },
+                  h("img", {
+                    src: getAsset(bild).toString(),
+                    style: {
+                      width: "100%",
+                      height: "160px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      display: "block",
+                    },
+                  }),
+                  h(
+                    "span",
+                    {
+                      style: {
+                        position: "absolute",
+                        top: "6px",
+                        left: "6px",
+                        background: "rgba(0,0,0,0.7)",
+                        color: "#fff",
+                        fontSize: "12px",
+                        padding: "2px 8px",
+                        borderRadius: "10px",
+                      },
+                    },
+                    i + 1
+                  )
+                );
+              })
+              : []
+          )
+        );
+      },
+    });
+
+    CMS.registerPreviewTemplate("reisen", ReisenPreview);
+  </script>
 </body>
+
 </html>

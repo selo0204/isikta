@@ -37,6 +37,7 @@ collections:
         name: "bilder"
         widget: "list"
         required: false
+        collapsed: false
         media_folder: "/assets/img/{{fields.ordner}}"
         public_folder: "/assets/img/{{fields.ordner}}"
         field: { label: "Bild", name: "bild", widget: "image" }
