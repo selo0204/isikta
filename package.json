@@ -1,0 +1,10 @@
+{
+  "name": "isikta",
+  "version": "1.0.0",
+  "scripts": {
+    "build:data": "node build-data.js"
+  },
+  "dependencies": {
+    "sharp": "^0.33.0"
+  }
+}
