@@ -56,6 +56,7 @@ const reisen = [
       "/assets/img/views/view-0039.webp",
       "/assets/img/views/view-0040.webp"
     ],
+    "videos": [],
     "anzahl": 40
   },
   {
@@ -85,6 +86,7 @@ const reisen = [
       "/assets/img/fierence/fierence-0014.webp",
       "/assets/img/fierence/fierence-0015.webp"
     ],
+    "videos": [],
     "anzahl": 15
   },
   {
@@ -105,6 +107,7 @@ const reisen = [
       "/assets/img/kapadokien/kapadokien-0005.webp",
       "/assets/img/kapadokien/kapadokien-0006.webp"
     ],
+    "videos": [],
     "anzahl": 6
   },
   {
@@ -143,6 +146,7 @@ const reisen = [
       "/assets/img/london/london-0023.webp",
       "/assets/img/london/london-0024.webp"
     ],
+    "videos": [],
     "anzahl": 24
   },
   {
@@ -182,6 +186,7 @@ const reisen = [
       "/assets/img/milan/milan-0024.webp",
       "/assets/img/milan/milan-0025.webp"
     ],
+    "videos": [],
     "anzahl": 25
   },
   {
@@ -216,6 +221,7 @@ const reisen = [
       "/assets/img/Prague/prague-0019.webp",
       "/assets/img/Prague/prague-0020.webp"
     ],
+    "videos": [],
     "anzahl": 20
   },
   {
@@ -235,6 +241,7 @@ const reisen = [
       "/assets/img/tunningWorld/tunningWorld-0004.webp",
       "/assets/img/tunningWorld/tunningWorld-0005.webp"
     ],
+    "videos": [],
     "anzahl": 5
   },
   {
@@ -260,6 +267,7 @@ const reisen = [
       "/assets/img/vienna/vienna-0008.webp",
       "/assets/img/vienna/vienna-0009.webp"
     ],
+    "videos": [],
     "anzahl": 11
   }
 ];
