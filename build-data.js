@@ -2,63 +2,36 @@
  * build-data.js
  *
  * Runs automatically on every push (via GitHub Action) and again as a
- * Cloudflare Pages build step. It does three jobs:
+ * Cloudflare Pages build step.
  *
- * 1. IMAGE PROCESSING
- *    For every travel folder under assets/img/<ordner>/, looks inside an
- *    "incoming" subfolder for newly dropped/uploaded photos (any format,
- *    any size, any filename). Each one gets resized (max width 2200px)
- *    and converted to WebP, then renamed to the next free
- *    "<praefix>-XXXX.webp" slot in the main folder. The original file in
- *    "incoming" is then deleted.
- *
- * 2. ORDER LIST MAINTENANCE (content/reisen/<id>.json -> "bilder" field)
- *    Each trip's JSON file has a "bilder" array: an ordered list of
- *    filenames, e.g. ["vienna-0001.webp", "vienna-0003.webp", ...].
- *    This is the single source of truth for both the gallery ORDER and
- *    which photos are actually shown.
- *      - Newly processed photos (from step 1) are appended to the end
- *        of this list automatically.
- *      - Any filename in the list that no longer exists on disk (e.g.
- *        deleted directly on GitHub) is dropped automatically.
- *      - Manual reordering or removal done in the admin form (Decap CMS)
- *        is preserved as-is - this script only appends/cleans, it never
- *        reorders existing entries.
- *      - MIGRATION: if a trip has no "bilder" array yet at all (e.g. it
- *        was created before this field existed), the initial order is
- *        bootstrapped automatically from whatever numbered files already
- *        exist on disk, sorted numerically - so nothing disappears.
- *    The updated "bilder" array is written back into
- *    content/reisen/<id>.json so the admin form always reflects the
- *    current, real state.
- *
- * 3. DATA GENERATION
- *    Reads every content/reisen/*.json file plus content/favoriten.json
- *    and writes the final assets/js/reisen-data.js that the website
- *    actually uses, including the ordered "bilder" list per trip.
+ * 1. IMAGE PROCESSING - processes assets/img/<ordner>/incoming/ photos,
+ *    resizing/converting to WebP, appending to an ordered "bilder" list.
+ * 2. VIDEO PROCESSING - processes assets/videos/<ordner>/incoming/ clips,
+ *    compressing to stay under Cloudflare's 25 MiB per-file limit,
+ *    generating a poster frame, appending to an ordered "videos" list.
+ * 3. DATA GENERATION - writes assets/js/reisen-data.js for the website.
  */
 
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
+const { execFileSync } = require("child_process");
 
 const ROOT = path.join(__dirname);
 const CONTENT_REISEN_DIR = path.join(ROOT, "content", "reisen");
 const FAVORITEN_PATH = path.join(ROOT, "content", "favoriten.json");
 const IMG_DIR = path.join(ROOT, "assets", "img");
+const VIDEO_DIR = path.join(ROOT, "assets", "videos");
 const OUTPUT_PATH = path.join(ROOT, "assets", "js", "reisen-data.js");
 
 const MAX_WIDTH = 2200;
 const WEBP_QUALITY = 88;
-const SUPPORTED_INPUT_EXT = [
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".heic",
-  ".webp",
-  ".tif",
-  ".tiff",
-];
+const SUPPORTED_INPUT_EXT = [".jpg", ".jpeg", ".png", ".heic", ".webp", ".tif", ".tiff"];
+
+const MAX_VIDEO_MB = 20; // stay comfortably under Cloudflare Pages' 25 MiB per-file limit
+const MAX_VIDEO_HEIGHT = 1280;
+const MAX_VIDEO_KBPS = 4000;
+const SUPPORTED_VIDEO_EXT = [".mp4", ".mov", ".m4v", ".webm", ".avi"];
 
 function log(msg) {
   console.log(`[build-data] ${msg}`);
@@ -66,6 +39,26 @@ function log(msg) {
 
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getFfmpegPath() {
+  try {
+    return require("ffmpeg-static");
+  } catch (e) {
+    return "ffmpeg";
+  }
+}
+
+function getVideoDurationSeconds(ffmpegPath, filePath) {
+  try {
+    execFileSync(ffmpegPath, ["-i", filePath], { stdio: ["ignore", "ignore", "pipe"] });
+    return 10;
+  } catch (e) {
+    const stderr = e.stderr ? e.stderr.toString() : "";
+    const match = stderr.match(/Duration: (\d+):(\d+):(\d+\.\d+)/);
+    if (!match) return 10;
+    return parseInt(match[1], 10) * 3600 + parseInt(match[2], 10) * 60 + parseFloat(match[3]);
+  }
 }
 
 // ---------- Step 1: process "incoming" photos for a single trip ----------
@@ -91,9 +84,7 @@ async function processIncoming(ordner, praefix) {
     if (match) highestIndex = Math.max(highestIndex, parseInt(match[1], 10));
   }
 
-  log(
-    `${ordner}: found ${incomingFiles.length} new photo(s) in incoming/, starting at index ${highestIndex + 1}`,
-  );
+  log(`${ordner}: found ${incomingFiles.length} new photo(s) in incoming/, starting at index ${highestIndex + 1}`);
 
   for (const file of incomingFiles) {
     highestIndex += 1;
@@ -116,7 +107,102 @@ async function processIncoming(ordner, praefix) {
   return newlyCreated;
 }
 
-// ---------- Step 2: reconcile the ordered "bilder" list ----------
+// ---------- Video: process "incoming" clips for a single trip ----------
+async function processIncomingVideos(ordner, praefix) {
+  const folderPath = path.join(VIDEO_DIR, ordner);
+  const incomingPath = path.join(folderPath, "incoming");
+  const newlyCreated = [];
+
+  if (!fs.existsSync(incomingPath)) return newlyCreated;
+
+  const incomingFiles = fs
+    .readdirSync(incomingPath)
+    .filter((f) => SUPPORTED_VIDEO_EXT.includes(path.extname(f).toLowerCase()))
+    .sort();
+
+  if (incomingFiles.length === 0) return newlyCreated;
+
+  fs.mkdirSync(folderPath, { recursive: true });
+
+  const existing = fs.readdirSync(folderPath);
+  const pattern = new RegExp(`^${escapeRegExp(praefix)}-video-(\\d{4})\\.mp4$`);
+  let highestIndex = 0;
+  for (const file of existing) {
+    const match = file.match(pattern);
+    if (match) highestIndex = Math.max(highestIndex, parseInt(match[1], 10));
+  }
+
+  const ffmpegPath = getFfmpegPath();
+
+  log(`${ordner}: found ${incomingFiles.length} new video(s) in incoming/, starting at index ${highestIndex + 1}`);
+
+  for (const file of incomingFiles) {
+    highestIndex += 1;
+    const nummer = String(highestIndex).padStart(4, "0");
+    const inputPath = path.join(incomingPath, file);
+    const outputFilename = `${praefix}-video-${nummer}.mp4`;
+    const posterFilename = `${praefix}-video-${nummer}-poster.jpg`;
+    const outputPath = path.join(folderPath, outputFilename);
+    const posterPath = path.join(folderPath, posterFilename);
+
+    const duration = getVideoDurationSeconds(ffmpegPath, inputPath);
+    const targetKbps = Math.min(
+      MAX_VIDEO_KBPS,
+      Math.max(300, Math.floor((MAX_VIDEO_MB * 8192) / duration) - 128)
+    );
+
+    execFileSync(ffmpegPath, [
+      "-y",
+      "-i", inputPath,
+      "-vf", `scale=-2:'min(${MAX_VIDEO_HEIGHT},ih)'`,
+      "-c:v", "libx264",
+      "-b:v", `${targetKbps}k`,
+      "-preset", "medium",
+      "-c:a", "aac",
+      "-b:a", "128k",
+      "-movflags", "+faststart",
+      outputPath,
+    ]);
+
+    execFileSync(ffmpegPath, [
+      "-y",
+      "-i", outputPath,
+      "-ss", "00:00:01",
+      "-frames:v", "1",
+      "-update", "1",
+      posterPath,
+    ]);
+
+    fs.unlinkSync(inputPath);
+    newlyCreated.push(outputFilename);
+    log(`  -> ${file} => ${outputFilename} (poster: ${posterFilename})`);
+  }
+
+  return newlyCreated;
+}
+
+function reconcileVideoList(ordner, existingList, newlyCreated) {
+  const folderPath = path.join(VIDEO_DIR, ordner);
+  const onDisk = fs.existsSync(folderPath)
+    ? new Set(fs.readdirSync(folderPath).filter((f) => f.endsWith(".mp4")))
+    : new Set();
+
+  const toFilename = (entry) => path.basename(entry);
+
+  const cleanedFilenames = (existingList || [])
+    .map(toFilename)
+    .filter((f) => onDisk.has(f));
+
+  for (const file of newlyCreated) {
+    if (!cleanedFilenames.includes(file)) cleanedFilenames.push(file);
+  }
+
+  return cleanedFilenames.map((filename) => ({
+    video: `/assets/videos/${ordner}/${filename}`,
+    poster: `/assets/videos/${ordner}/${filename.replace(/\.mp4$/, "-poster.jpg")}`,
+  }));
+}
+
 function reconcileBilderList(ordner, praefix, existingList, newlyCreated) {
   const folderPath = path.join(IMG_DIR, ordner);
   const onDisk = fs.existsSync(folderPath)
@@ -137,18 +223,14 @@ function reconcileBilderList(ordner, praefix, existingList, newlyCreated) {
         return numA - numB;
       });
   } else {
-    cleanedFilenames = existingList
-      .map(toFilename)
-      .filter((f) => onDisk.has(f));
+    cleanedFilenames = existingList.map(toFilename).filter((f) => onDisk.has(f));
   }
 
   for (const file of newlyCreated) {
     if (!cleanedFilenames.includes(file)) cleanedFilenames.push(file);
   }
 
-  return cleanedFilenames.map(
-    (filename) => `/assets/img/${ordner}/${filename}`,
-  );
+  return cleanedFilenames.map((filename) => `/assets/img/${ordner}/${filename}`);
 }
 
 // ---------- Main ----------
@@ -170,30 +252,22 @@ async function main() {
     const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
     if (!data.ordner || !data.praefix) {
-      console.error(
-        `Trip file ${file} is missing "ordner" or "praefix" - skipping`,
-      );
+      console.error(`Trip file ${file} is missing "ordner" or "praefix" - skipping`);
       continue;
     }
 
     const newlyCreated = await processIncoming(data.ordner, data.praefix);
-    const bilder = reconcileBilderList(
-      data.ordner,
-      data.praefix,
-      data.bilder,
-      newlyCreated,
-    );
+    const bilder = reconcileBilderList(data.ordner, data.praefix, data.bilder, newlyCreated);
 
-    const { neue_fotos, bilder: _oldBilder, ...rest } = data;
-    const updatedData = { ...rest, bilder };
-    fs.writeFileSync(
-      filePath,
-      JSON.stringify(updatedData, null, 2) + "\n",
-      "utf-8",
-    );
+    const newlyCreatedVideos = await processIncomingVideos(data.ordner, data.praefix);
+    const videos = reconcileVideoList(data.ordner, data.videos, newlyCreatedVideos);
+
+    const { neue_fotos, neue_videos, bilder: _oldBilder, videos: _oldVideos, ...rest } = data;
+    const updatedData = { ...rest, bilder, videos };
+    fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2) + "\n", "utf-8");
 
     reisen.push({ ...updatedData, anzahl: bilder.length });
-    log(`${data.id}: ${bilder.length} photo(s) total`);
+    log(`${data.id}: ${bilder.length} photo(s), ${videos.length} video(s) total`);
   }
 
   const favoritenFile = fs.existsSync(FAVORITEN_PATH)

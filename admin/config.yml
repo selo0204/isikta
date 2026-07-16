@@ -41,6 +41,13 @@ collections:
         media_folder: "/assets/img/{{fields.ordner}}"
         public_folder: "/assets/img/{{fields.ordner}}"
         field: { label: "Bild", name: "bild", widget: "cropped-image" }
+      - label: "Neue Videos hochladen (werden automatisch komprimiert & ans Ende angehängt)"
+        name: "neue_videos"
+        widget: "list"
+        required: false
+        media_folder: "/assets/videos/{{fields.ordner}}/incoming"
+        public_folder: "/assets/videos/{{fields.ordner}}/incoming"
+        field: { label: "Video", name: "video", widget: "file" }
 
   - name: "favoriten"
     label: "Favoriten"

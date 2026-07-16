@@ -140,7 +140,26 @@ function renderDetail() {
   setText("info-kategorie", reise.kategorie);
   setText("info-zeitraum", reise.zeitraum);
   setText("info-anzahl", `${reise.anzahl} Fotos`);
-
+  const videoGrid = document.getElementById("detail-videos");
+  if (videoGrid) {
+    if (reise.videos && reise.videos.length > 0) {
+      let videosHtml = "";
+      reise.videos.forEach((v, i) => {
+        const videoSrc = bildpfad(reise, v.video);
+        const posterSrc = bildpfad(reise, v.poster);
+        videosHtml += `
+          <div class="gallery-item">
+            <video controls preload="none" poster="${posterSrc}" style="width:100%; border-radius:10px; display:block;">
+              <source src="${videoSrc}" type="video/mp4">
+            </video>
+          </div>`;
+      });
+      videoGrid.innerHTML = videosHtml;
+      videoGrid.closest("section").style.display = "";
+    } else {
+      videoGrid.closest("section").style.display = "none";
+    }
+  }
   const grid = document.getElementById("detail-galerie");
   if (grid && reise.bilder) {
     let bilder = "";
