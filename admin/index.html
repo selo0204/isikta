@@ -277,6 +277,7 @@
     });
 
     CMS.registerWidget("cropped-image", CroppedImageControl, CroppedImagePreview);
+
     var VideoUploadControl = createClass({
       componentWillMount: function () {
         this._instanceId = Math.random().toString(36).slice(2);
@@ -355,43 +356,6 @@
           console.error("VideoUploadControl render error:", err);
           return h("div", { style: { color: "red", fontSize: "12px" } }, "Fehler beim Anzeigen des Video-Feldes - bitte diesen Eintrag löschen und neu anlegen.");
         }
-      },
-    });
-
-
-    children.push(
-      h(
-        "label",
-        {
-          key: "file-label",
-          htmlFor: inputId,
-          style: {
-            display: "inline-block",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            background: "#f7f7f7",
-            color: "#333",
-            cursor: "pointer",
-            fontSize: "13px",
-          },
-        },
-        videoSrc ? "Video ändern" : "Video auswählen"
-      )
-    );
-
-    children.push(
-      h("input", {
-        key: "file-input",
-        id: inputId,
-        type: "file",
-        accept: "video/*,.mp4,.mov,.m4v,.webm,.avi",
-        onChange: this.handleFileInput,
-        style: { display: "none" },
-      })
-    );
-
-    return h("div", {}, children);
       },
     });
 
