@@ -288,57 +288,110 @@
       },
 
       render: function () {
-        var value = this.props.value;
-        var getAsset = this.props.getAsset;
-        var videoSrc = value && getAsset ? getAsset(value).toString() : value;
-        var inputId = "video-input-" + this._instanceId;
+        try {
+          var value = this.props.value;
+          var getAsset = this.props.getAsset;
+          var videoSrc = null;
+          if (value && getAsset) {
+            try {
+              var asset = getAsset(value);
+              videoSrc = asset ? asset.toString() : null;
+            } catch (assetErr) {
+              videoSrc = null;
+            }
+          } else if (typeof value === "string") {
+            videoSrc = value;
+          }
 
-        var children = [];
+          var inputId = "video-input-" + (this._instanceId || Math.random().toString(36).slice(2));
 
-        if (videoSrc) {
+          var children = [];
+
+          if (videoSrc) {
+            children.push(
+              h("video", {
+                key: "preview",
+                src: videoSrc,
+                controls: true,
+                style: { width: "100%", maxWidth: "280px", display: "block", marginBottom: "8px", borderRadius: "6px" },
+              })
+            );
+          }
+
           children.push(
-            h("video", {
-              key: "preview",
-              src: videoSrc,
-              controls: true,
-              style: { width: "100%", maxWidth: "280px", display: "block", marginBottom: "8px", borderRadius: "6px" },
+            h(
+              "label",
+              {
+                key: "file-label",
+                htmlFor: inputId,
+                style: {
+                  display: "inline-block",
+                  padding: "6px 12px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  background: "#f7f7f7",
+                  color: "#333",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                },
+              },
+              videoSrc ? "Video ändern" : "Video auswählen"
+            )
+          );
+
+          children.push(
+            h("input", {
+              key: "file-input",
+              id: inputId,
+              type: "file",
+              accept: "video/*,.mp4,.mov,.m4v,.webm,.avi",
+              onChange: this.handleFileInput,
+              style: { display: "none" },
             })
           );
+
+          return h("div", {}, children);
+        } catch (err) {
+          console.error("VideoUploadControl render error:", err);
+          return h("div", { style: { color: "red", fontSize: "12px" } }, "Fehler beim Anzeigen des Video-Feldes - bitte diesen Eintrag löschen und neu anlegen.");
         }
+      },
+    });
 
-        children.push(
-          h(
-            "label",
-            {
-              key: "file-label",
-              htmlFor: inputId,
-              style: {
-                display: "inline-block",
-                padding: "6px 12px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                background: "#f7f7f7",
-                color: "#333",
-                cursor: "pointer",
-                fontSize: "13px",
-              },
-            },
-            videoSrc ? "Video ändern" : "Video auswählen"
-          )
-        );
 
-        children.push(
-          h("input", {
-            key: "file-input",
-            id: inputId,
-            type: "file",
-            accept: "video/*,.mp4,.mov,.m4v,.webm,.avi",
-            onChange: this.handleFileInput,
-            style: { display: "none" },
-          })
-        );
+    children.push(
+      h(
+        "label",
+        {
+          key: "file-label",
+          htmlFor: inputId,
+          style: {
+            display: "inline-block",
+            padding: "6px 12px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            background: "#f7f7f7",
+            color: "#333",
+            cursor: "pointer",
+            fontSize: "13px",
+          },
+        },
+        videoSrc ? "Video ändern" : "Video auswählen"
+      )
+    );
 
-        return h("div", {}, children);
+    children.push(
+      h("input", {
+        key: "file-input",
+        id: inputId,
+        type: "file",
+        accept: "video/*,.mp4,.mov,.m4v,.webm,.avi",
+        onChange: this.handleFileInput,
+        style: { display: "none" },
+      })
+    );
+
+    return h("div", {}, children);
       },
     });
 
