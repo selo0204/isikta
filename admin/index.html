@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +8,7 @@
   <meta name="robots" content="noindex" />
   <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.1/dist/cropper.css" />
 </head>
+
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script src="https://unpkg.com/cropperjs@1.6.1/dist/cropper.js"></script>
@@ -275,6 +277,82 @@
     });
 
     CMS.registerWidget("cropped-image", CroppedImageControl, CroppedImagePreview);
+    var VideoUploadControl = createClass({
+      componentWillMount: function () {
+        this._instanceId = Math.random().toString(36).slice(2);
+      },
+
+      handleFileInput: function (e) {
+        var file = e.target.files && e.target.files[0];
+        if (file) this.props.onChange(file);
+      },
+
+      render: function () {
+        var value = this.props.value;
+        var getAsset = this.props.getAsset;
+        var videoSrc = value && getAsset ? getAsset(value).toString() : value;
+        var inputId = "video-input-" + this._instanceId;
+
+        var children = [];
+
+        if (videoSrc) {
+          children.push(
+            h("video", {
+              key: "preview",
+              src: videoSrc,
+              controls: true,
+              style: { width: "100%", maxWidth: "280px", display: "block", marginBottom: "8px", borderRadius: "6px" },
+            })
+          );
+        }
+
+        children.push(
+          h(
+            "label",
+            {
+              key: "file-label",
+              htmlFor: inputId,
+              style: {
+                display: "inline-block",
+                padding: "6px 12px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                background: "#f7f7f7",
+                color: "#333",
+                cursor: "pointer",
+                fontSize: "13px",
+              },
+            },
+            videoSrc ? "Video ändern" : "Video auswählen"
+          )
+        );
+
+        children.push(
+          h("input", {
+            key: "file-input",
+            id: inputId,
+            type: "file",
+            accept: "video/*,.mp4,.mov,.m4v,.webm,.avi",
+            onChange: this.handleFileInput,
+            style: { display: "none" },
+          })
+        );
+
+        return h("div", {}, children);
+      },
+    });
+
+    var VideoUploadPreview = createClass({
+      render: function () {
+        var value = this.props.value;
+        var getAsset = this.props.getAsset;
+        var src = value && getAsset ? getAsset(value).toString() : value;
+        if (!src) return h("div", {});
+        return h("video", { src: src, controls: true, style: { maxWidth: "300px" } });
+      },
+    });
+
+    CMS.registerWidget("video-upload", VideoUploadControl, VideoUploadPreview);
   </script>
 
   <script>
@@ -338,35 +416,35 @@
             },
             bilder.toArray
               ? bilder.toArray().map(function (bild, i) {
-                  return h("div", { key: i, style: { position: "relative" } },
-                    h("img", {
-                      src: getAsset(bild).toString(),
+                return h("div", { key: i, style: { position: "relative" } },
+                  h("img", {
+                    src: getAsset(bild).toString(),
+                    style: {
+                      width: "100%",
+                      height: "160px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      display: "block",
+                    },
+                  }),
+                  h(
+                    "span",
+                    {
                       style: {
-                        width: "100%",
-                        height: "160px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                        display: "block",
+                        position: "absolute",
+                        top: "6px",
+                        left: "6px",
+                        background: "rgba(0,0,0,0.7)",
+                        color: "#fff",
+                        fontSize: "12px",
+                        padding: "2px 8px",
+                        borderRadius: "10px",
                       },
-                    }),
-                    h(
-                      "span",
-                      {
-                        style: {
-                          position: "absolute",
-                          top: "6px",
-                          left: "6px",
-                          background: "rgba(0,0,0,0.7)",
-                          color: "#fff",
-                          fontSize: "12px",
-                          padding: "2px 8px",
-                          borderRadius: "10px",
-                        },
-                      },
-                      i + 1
-                    )
-                  );
-                })
+                    },
+                    i + 1
+                  )
+                );
+              })
               : []
           )
         );
@@ -414,64 +492,64 @@
             },
             favoriten.toArray
               ? favoriten.toArray().map(function (fav, i) {
-                  var ort = fav.get("ort") || "";
-                  var index = fav.get("index");
-                  var groesse = fav.get("groesse") || "";
-                  var isGross = groesse === "gross";
-                  return h(
-                    "div",
-                    {
-                      key: i,
-                      style: {
-                        background: "#1a1a1a",
-                        border: "1px solid #333",
-                        borderRadius: "10px",
-                        padding: "14px 16px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      },
+                var ort = fav.get("ort") || "";
+                var index = fav.get("index");
+                var groesse = fav.get("groesse") || "";
+                var isGross = groesse === "gross";
+                return h(
+                  "div",
+                  {
+                    key: i,
+                    style: {
+                      background: "#1a1a1a",
+                      border: "1px solid #333",
+                      borderRadius: "10px",
+                      padding: "14px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                     },
+                  },
+                  h(
+                    "div",
+                    {},
                     h(
                       "div",
-                      {},
-                      h(
-                        "div",
-                        {
-                          style: {
-                            fontSize: "16px",
-                            fontWeight: 600,
-                            textTransform: "capitalize",
-                          },
-                        },
-                        ort
-                      ),
-                      h(
-                        "div",
-                        {
-                          style: { fontSize: "13px", color: "#999", marginTop: "2px" },
-                        },
-                        "Foto Nr. " + index
-                      )
-                    ),
-                    h(
-                      "span",
                       {
                         style: {
-                          fontSize: "12px",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.5px",
-                          padding: "4px 10px",
-                          borderRadius: "20px",
-                          background: isGross ? "#c97b84" : "transparent",
-                          border: isGross ? "none" : "1px solid #666",
-                          color: isGross ? "#fff" : "#999",
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          textTransform: "capitalize",
                         },
                       },
-                      groesse
+                      ort
+                    ),
+                    h(
+                      "div",
+                      {
+                        style: { fontSize: "13px", color: "#999", marginTop: "2px" },
+                      },
+                      "Foto Nr. " + index
                     )
-                  );
-                })
+                  ),
+                  h(
+                    "span",
+                    {
+                      style: {
+                        fontSize: "12px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        padding: "4px 10px",
+                        borderRadius: "20px",
+                        background: isGross ? "#c97b84" : "transparent",
+                        border: isGross ? "none" : "1px solid #666",
+                        color: isGross ? "#fff" : "#999",
+                      },
+                    },
+                    groesse
+                  )
+                );
+              })
               : []
           )
         );
@@ -482,4 +560,5 @@
     CMS.registerPreviewTemplate("favoriten_liste", FavoritenPreview);
   </script>
 </body>
+
 </html>

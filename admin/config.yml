@@ -47,8 +47,7 @@ collections:
         required: false
         media_folder: "/assets/videos/{{fields.ordner}}/incoming"
         public_folder: "/assets/videos/{{fields.ordner}}/incoming"
-        field: { label: "Video", name: "video", widget: "file" }
-
+        field: { label: "Video", name: "video", widget: "video-upload" }
   - name: "favoriten"
     label: "Favoriten"
     files:
